@@ -1,0 +1,12 @@
+dist
+node_modules
+.agents/
+.vscode/
+AGENTS.md
+CLAUDE.md
+docs/activity-feed-validation.md
+docs/activity-payload.md
+docs/note-polling-sanity.md
+docs/release-readiness.md
+docs/reference/sentinelone-unified-alerts-schema-*.graphql
+docs/reference/sentinelone-unified-alerts-schema-*.json
