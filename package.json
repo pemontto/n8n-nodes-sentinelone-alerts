@@ -1,5 +1,5 @@
 {
-	"name": "n8n-nodes-sentinelone",
+	"name": "@pemontto/n8n-nodes-sentinelone",
 	"version": "0.1.0",
 	"description": "n8n community nodes for SentinelOne alerts and SDL",
 	"license": "MIT",
@@ -19,6 +19,9 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/pemontto/n8n-nodes-sentinelone.git"
+	},
+	"publishConfig": {
+		"access": "public"
 	},
 	"scripts": {
 		"build": "n8n-node build",

@@ -6,7 +6,7 @@ The trigger polls credential-visible account, site, or group scopes. It emits ne
 
 ## Installation
 
-Install the package with the [n8n community node installation guide](https://docs.n8n.io/integrations/community-nodes/installation/).
+Install `@pemontto/n8n-nodes-sentinelone` with the [n8n community node installation guide](https://docs.n8n.io/integrations/community-nodes/installation/).
 
 ## Credentials
 
