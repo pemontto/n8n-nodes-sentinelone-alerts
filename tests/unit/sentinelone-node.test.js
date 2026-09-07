@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 
-const { SentinelOne } = require('../../dist/nodes/SentinelOne/SentinelOne.node.js');
+const { SentinelOneAlerts } = require('../../dist/nodes/SentinelOne/SentinelOneAlerts.node.js');
 const { routeSentinelOneOperation } = require('../../dist/nodes/SentinelOne/router.js');
 
 const ACCOUNT_ID = '90071992547409930001';
@@ -10,7 +10,7 @@ const ALERT_ID = '018e1efe-6784-7c0f-893f-b8b8e740a6cd';
 const workflowNode = {
 	id: 'sentinel-one',
 	name: 'SentinelOne',
-	type: 'n8n-nodes-sentinelone.sentinelOne',
+	type: 'n8n-nodes-sentinelone-alerts.sentinelOneAlerts',
 	typeVersion: 1,
 	position: [0, 0],
 	parameters: {},
@@ -77,18 +77,18 @@ function propertiesByName(description, name) {
 }
 
 test('action node description exposes the intended v1 resources, operations, and defaults', () => {
-	const { description } = new SentinelOne();
+	const { description } = new SentinelOneAlerts();
 
-	assert.equal(description.displayName, 'SentinelOne');
-	assert.equal(description.name, 'sentinelOne');
+	assert.equal(description.displayName, 'SentinelOne Alerts');
+	assert.equal(description.name, 'sentinelOneAlerts');
 	assert.equal(description.version, 1);
 	assert.deepEqual(description.icon, {
-		light: 'file:../SentinelOneTrigger/sentinelone.svg',
-		dark: 'file:../SentinelOneTrigger/sentinelone.dark.svg',
+		light: 'file:../SentinelOneAlertsTrigger/sentinelone.svg',
+		dark: 'file:../SentinelOneAlertsTrigger/sentinelone.dark.svg',
 	});
 	assert.deepEqual(description.inputs, ['main']);
 	assert.deepEqual(description.outputs, ['main']);
-	assert.deepEqual(description.credentials, [{ name: 'sentinelOneApi', required: true }]);
+	assert.deepEqual(description.credentials, [{ name: 'sentinelOneAlertsApi', required: true }]);
 	assert.equal(description.usableAsTool, true);
 
 	const [resource] = propertiesByName(description, 'resource');
@@ -211,7 +211,7 @@ test('execute pairs every fanned-out result with its source input item', async (
 			filters: {},
 		}),
 	];
-	const node = new SentinelOne();
+	const node = new SentinelOneAlerts();
 	const result = await node.execute.call(
 		executionContext(parameters, async (_credentialName, options) => {
 			const accountId = options.body.variables.scope.scopeIds[0];
@@ -232,7 +232,7 @@ test('execute pairs every fanned-out result with its source input item', async (
 });
 
 test('execute emits no item when an operation returns no values', async () => {
-	const node = new SentinelOne();
+	const node = new SentinelOneAlerts();
 	const result = await node.execute.call(
 		executionContext(
 			[
@@ -252,7 +252,7 @@ test('execute emits no item when an operation returns no values', async () => {
 
 test('Continue On Fail links an HTTP-200 GraphQL error to its input and continues', async () => {
 	const secondAlertId = '018e1efe-6784-7c0f-893f-b8b8e740a6ce';
-	const node = new SentinelOne();
+	const node = new SentinelOneAlerts();
 	const result = await node.execute.call(
 		executionContext(
 			[alertParameters(), alertParameters({ alertId: secondAlertId })],
@@ -321,7 +321,7 @@ test('Continue On Fail preserves an indeterminate note mutation outcome', async 
 		text: submittedText,
 		contentType: 'MARKDOWN',
 	};
-	const node = new SentinelOne();
+	const node = new SentinelOneAlerts();
 	const result = await node.execute.call(
 		executionContext(
 			[parameters],

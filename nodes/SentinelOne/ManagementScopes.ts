@@ -32,7 +32,11 @@ export function normalizeBaseUrl(value: unknown): string {
 
 export function authenticatedRequest(context: ILoadOptionsFunctions): AuthenticatedRequest {
 	return async (options) =>
-		await context.helpers.httpRequestWithAuthentication.call(context, 'sentinelOneApi', options);
+		await context.helpers.httpRequestWithAuthentication.call(
+			context,
+			'sentinelOneAlertsApi',
+			options,
+		);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -160,7 +164,7 @@ export async function loadManagementScopeOptions(
 ): Promise<INodePropertyOptions[]> {
 	const startedAt = Date.now();
 	const path = scopePath(scopeType);
-	const credentials = await context.getCredentials('sentinelOneApi');
+	const credentials = await context.getCredentials('sentinelOneAlertsApi');
 	const baseUrl = normalizeBaseUrl(credentials.baseUrl);
 	if (!baseUrl) {
 		throw new NodeOperationError(

@@ -15,7 +15,7 @@ const ACCOUNT_ID = '90071992547409930001';
 const node = {
 	id: 'sentinel-one',
 	name: 'SentinelOne',
-	type: 'n8n-nodes-sentinelone.sentinelOne',
+	type: 'n8n-nodes-sentinelone-alerts.sentinelOneAlerts',
 	typeVersion: 1,
 	position: [0, 0],
 	parameters: {},

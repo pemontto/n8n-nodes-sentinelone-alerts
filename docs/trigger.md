@@ -1,6 +1,6 @@
-# SentinelOne Trigger
+# SentinelOne Alerts Trigger
 
-The **SentinelOne Trigger** polls SentinelOne and starts a workflow when a matching alert or alert note event appears.
+The **SentinelOne Alerts Trigger** polls SentinelOne and starts a workflow when a matching alert or alert note event appears.
 
 ## Operations
 
@@ -79,7 +79,7 @@ Debug logging excludes authorization headers, API tokens, note text, and respons
 
 ## Example
 
-1. Add **SentinelOne Trigger** to a workflow.
+1. Add **SentinelOne Alerts Trigger** to a workflow.
 2. Select a SentinelOne credential.
 3. Select **Alert** and **New or Updated**.
 4. Select a scope, or leave accounts empty to use all visible accounts.

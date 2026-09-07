@@ -1,6 +1,6 @@
 # Credentials
 
-Create a SentinelOne API token, then add a **SentinelOne API** credential in n8n.
+Create a SentinelOne API token, then add a **SentinelOne Alerts API** credential in n8n.
 
 Enter:
 

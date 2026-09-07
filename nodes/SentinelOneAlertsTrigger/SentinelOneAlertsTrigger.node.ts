@@ -40,9 +40,9 @@ function readStringArray(context: IPollFunctions | ILoadOptionsFunctions, name: 
 
 function credentialIdentity(context: IPollFunctions): IDataObject {
 	const credentials = context.getNode().credentials as IDataObject | undefined;
-	const selected = credentials?.sentinelOneApi as IDataObject | undefined;
+	const selected = credentials?.sentinelOneAlertsApi as IDataObject | undefined;
 	return {
-		type: 'sentinelOneApi',
+		type: 'sentinelOneAlertsApi',
 		id: selected?.id ?? null,
 	};
 }
@@ -51,7 +51,11 @@ function authenticatedRequest(
 	context: IPollFunctions | ILoadOptionsFunctions,
 ): AuthenticatedRequest {
 	return async (options) =>
-		await context.helpers.httpRequestWithAuthentication.call(context, 'sentinelOneApi', options);
+		await context.helpers.httpRequestWithAuthentication.call(
+			context,
+			'sentinelOneAlertsApi',
+			options,
+		);
 }
 
 async function scopeOptions(
@@ -59,7 +63,7 @@ async function scopeOptions(
 	scopeType: ScopeType,
 	filters: ScopeDiscoveryFilters = {},
 ): Promise<INodePropertyOptions[]> {
-	const credentials = await context.getCredentials('sentinelOneApi');
+	const credentials = await context.getCredentials('sentinelOneAlertsApi');
 	const baseUrl = normalizeBaseUrl(credentials.baseUrl);
 	try {
 		return await loadScopeOptions(authenticatedRequest(context), baseUrl, scopeType, filters);
@@ -87,10 +91,10 @@ async function validateSelectedScopes(
 	);
 }
 
-export class SentinelOneTrigger implements INodeType {
+export class SentinelOneAlertsTrigger implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'SentinelOne Trigger',
-		name: 'sentinelOneTrigger',
+		displayName: 'SentinelOne Alerts Trigger',
+		name: 'sentinelOneAlertsTrigger',
 		icon: { light: 'file:sentinelone.svg', dark: 'file:sentinelone.dark.svg' },
 		group: ['trigger'],
 		version: 1,
@@ -98,14 +102,14 @@ export class SentinelOneTrigger implements INodeType {
 			'={{$parameter["resource"] === "alertNote" ? "Alert note: Created" : "Alert: " + ({new: "New", newOrUpdated: "New or updated", updated: "Updated"}[$parameter["operation"]] || "New")}}',
 		description: 'Starts the workflow when selected SentinelOne Unified Alerts events are found',
 		defaults: {
-			name: 'SentinelOne Trigger',
+			name: 'SentinelOne Alerts Trigger',
 		},
 		inputs: [],
 		outputs: [NodeConnectionTypes.Main],
 		polling: true,
 		credentials: [
 			{
-				name: 'sentinelOneApi',
+				name: 'sentinelOneAlertsApi',
 				required: true,
 			},
 		],
@@ -419,7 +423,7 @@ export class SentinelOneTrigger implements INodeType {
 	methods = {
 		loadOptions: {
 			async getAccounts(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-				const credentials = await this.getCredentials('sentinelOneApi');
+				const credentials = await this.getCredentials('sentinelOneAlertsApi');
 				try {
 					return await loadScopeOptions(
 						authenticatedRequest(this),
@@ -451,12 +455,12 @@ export class SentinelOneTrigger implements INodeType {
 		const node = this.getNode();
 		const pollKey = `${this.getWorkflow().id}:${node.id}`;
 		if (activePollKeys.has(pollKey)) {
-			this.logger.warn('[SentinelOne Trigger] Skipping overlapping poll');
+			this.logger.warn('[SentinelOne Alerts Trigger] Skipping overlapping poll');
 			return null;
 		}
 		activePollKeys.add(pollKey);
 		try {
-			const credentials = await this.getCredentials('sentinelOneApi');
+			const credentials = await this.getCredentials('sentinelOneAlertsApi');
 			const options = this.getNodeParameter('options', {}) as IDataObject;
 			const nodeDebug = this.getNodeParameter('nodeDebug', options.debug === true) === true;
 			const staticData = this.getWorkflowStaticData('node');
@@ -548,7 +552,9 @@ export class SentinelOneTrigger implements INodeType {
 					debug: nodeDebug,
 					debugLog: nodeDebug
 						? (message, details = {}) =>
-								this.logger.debug(`[SentinelOne Trigger] ${message} ${JSON.stringify(details)}`)
+								this.logger.debug(
+									`[SentinelOne Alerts Trigger] ${message} ${JSON.stringify(details)}`,
+								)
 						: undefined,
 					overlapSeconds: 300,
 					alertLookbackDays: 1,

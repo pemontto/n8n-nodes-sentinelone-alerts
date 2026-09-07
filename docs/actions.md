@@ -1,6 +1,6 @@
 # SentinelOne actions
 
-The **SentinelOne** node supports alerts, alert notes, and SDL queries. Alert and note operations require an explicit account, site, or group scope.
+The **SentinelOne Alerts** node supports alerts, alert notes, and SDL queries. Alert and note operations require an explicit account, site, or group scope.
 
 ## Alert
 

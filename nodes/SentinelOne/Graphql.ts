@@ -428,7 +428,7 @@ async function graphQlRequest(
 	rootName: string,
 	mutation = false,
 ): Promise<unknown> {
-	const credentials = await context.getCredentials('sentinelOneApi');
+	const credentials = await context.getCredentials('sentinelOneAlertsApi');
 	const baseUrl = normalizeBaseUrl(credentials.baseUrl);
 	if (!baseUrl)
 		throw localError(context, itemIndex, 'The SentinelOne Management Console URL is empty.');
@@ -441,7 +441,7 @@ async function graphQlRequest(
 		try {
 			response = await context.helpers.httpRequestWithAuthentication.call(
 				context,
-				'sentinelOneApi',
+				'sentinelOneAlertsApi',
 				{
 					method: 'POST',
 					url: `${baseUrl}${GRAPHQL_PATH}`,

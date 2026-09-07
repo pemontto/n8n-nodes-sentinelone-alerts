@@ -5,14 +5,14 @@ import type {
 	INodeProperties,
 } from 'n8n-workflow';
 
-export class SentinelOneApi implements ICredentialType {
-	name = 'sentinelOneApi';
+export class SentinelOneAlertsApi implements ICredentialType {
+	name = 'sentinelOneAlertsApi';
 
-	displayName = 'SentinelOne API';
+	displayName = 'SentinelOne Alerts API';
 
 	icon = {
-		light: 'file:../nodes/SentinelOneTrigger/sentinelone.svg',
-		dark: 'file:../nodes/SentinelOneTrigger/sentinelone.dark.svg',
+		light: 'file:../nodes/SentinelOneAlertsTrigger/sentinelone.svg',
+		dark: 'file:../nodes/SentinelOneAlertsTrigger/sentinelone.dark.svg',
 	} as const;
 
 	documentationUrl = 'https://docs.sentinelone.com/';

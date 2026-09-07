@@ -76,10 +76,10 @@ test('loads every account page through the SentinelOne credential and sorts by n
 		{ name: 'Same', value: '20' },
 		{ name: 'Zulu', value: '12' },
 	]);
-	assert.deepEqual(fixture.credentialCalls, ['sentinelOneApi']);
+	assert.deepEqual(fixture.credentialCalls, ['sentinelOneAlertsApi']);
 	assert.equal(fixture.authenticationCalls.length, 2);
 	for (const call of fixture.authenticationCalls) {
-		assert.equal(call.credentialName, 'sentinelOneApi');
+		assert.equal(call.credentialName, 'sentinelOneAlertsApi');
 		assert.equal(call.receiver, fixture.context);
 		assert.equal(call.options.method, 'GET');
 		assert.equal(call.options.url, 'https://tenant.example/web/api/v2.1/accounts');

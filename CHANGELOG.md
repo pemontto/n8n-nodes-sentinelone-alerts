@@ -3,6 +3,7 @@
 ## 0.1.0 - 2026-09-07
 
 - Add one alert polling trigger and a reusable SentinelOne credential.
+- Publish as `n8n-nodes-sentinelone-alerts` with distinct node and credential identifiers so it can coexist with other SentinelOne community packages.
 - Support New, Updated, and New or Updated alert operations.
 - Detect note creation through SDL ActivityFeed activity type `16007`, including notes on unchanged old alerts.
 - Read note text directly from `data.payload.note_text`; return the activity ID explicitly and preserve author IDs and names from `data.user.id` and `data.user.enriched_name`, leaving unverified note IDs null.

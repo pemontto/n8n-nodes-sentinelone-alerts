@@ -1,6 +1,8 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { activityAccountIds } = require('../../dist/nodes/SentinelOneTrigger/ActivityScope.js');
+const {
+	activityAccountIds,
+} = require('../../dist/nodes/SentinelOneAlertsTrigger/ActivityScope.js');
 
 test('ActivityFeed resolves parent accounts through sites without listing accounts', async () => {
 	const urls = [];

@@ -6,10 +6,16 @@ const test = require('node:test');
 const packageRoot = resolve('.');
 const builtHelpers = join(
 	packageRoot,
-	'dist/nodes/SentinelOneTrigger/SentinelOneTriggerHelpers.js',
+	'dist/nodes/SentinelOneAlertsTrigger/SentinelOneTriggerHelpers.js',
 );
-const builtNode = join(packageRoot, 'dist/nodes/SentinelOneTrigger/SentinelOneTrigger.node.js');
-const sourceHelpers = join(packageRoot, 'nodes/SentinelOneTrigger/SentinelOneTriggerHelpers.ts');
+const builtNode = join(
+	packageRoot,
+	'dist/nodes/SentinelOneAlertsTrigger/SentinelOneAlertsTrigger.node.js',
+);
+const sourceHelpers = join(
+	packageRoot,
+	'nodes/SentinelOneAlertsTrigger/SentinelOneTriggerHelpers.ts',
+);
 
 const {
 	MAX_SEEN_ALERT_IDS,
@@ -20,14 +26,14 @@ const {
 	loadScopeOptions,
 	pollSentinelOne,
 } = require(existsSync(builtHelpers) ? builtHelpers : sourceHelpers);
-const { SentinelOneTrigger } = existsSync(builtNode) ? require(builtNode) : {};
+const { SentinelOneAlertsTrigger } = existsSync(builtNode) ? require(builtNode) : {};
 
 const NOW = Date.parse('2026-08-26T12:00:00.000Z');
 
 function config(overrides = {}) {
 	return {
 		baseUrl: 'https://tenant.example',
-		credentialIdentity: { type: 'sentinelOneApi', id: 'credential-1', name: 'Tenant' },
+		credentialIdentity: { type: 'sentinelOneAlertsApi', id: 'credential-1', name: 'Tenant' },
 		scopeType: 'ACCOUNT',
 		scopeIds: ['account-1'],
 		allVisibleAccounts: false,
@@ -148,7 +154,7 @@ function createNodeContext(params, request, mode = 'manual') {
 		getMode: () => mode,
 		getNode: () => ({
 			id: 'node-1',
-			credentials: { sentinelOneApi: { id: 'credential-1', name: 'Tenant' } },
+			credentials: { sentinelOneAlertsApi: { id: 'credential-1', name: 'Tenant' } },
 		}),
 		getNodeParameter: (name, fallback) => params[name] ?? fallback,
 		getWorkflowStaticData: () => staticData,
@@ -239,8 +245,8 @@ test('large visible-account selections are chunked into bounded GraphQL requests
 });
 
 test('empty scope selection discovers all accounts and the deepest selected scope wins', async () => {
-	assert.equal(typeof SentinelOneTrigger, 'function');
-	const node = new SentinelOneTrigger();
+	assert.equal(typeof SentinelOneAlertsTrigger, 'function');
+	const node = new SentinelOneAlertsTrigger();
 	const baseParams = {
 		accountIds: [],
 		siteIds: [],
@@ -310,7 +316,7 @@ test('empty scope selection discovers all accounts and the deepest selected scop
 });
 
 test('poll rejects stale descendant scopes that do not belong to the selected parent', async () => {
-	const node = new SentinelOneTrigger();
+	const node = new SentinelOneAlertsTrigger();
 	let graphQlRequests = 0;
 	const context = createNodeContext(
 		{
@@ -344,7 +350,7 @@ test('poll rejects stale descendant scopes that do not belong to the selected pa
 });
 
 test('overlapping polls are coalesced before they can read or overwrite the same state', async () => {
-	const node = new SentinelOneTrigger();
+	const node = new SentinelOneAlertsTrigger();
 	let releaseGraphQl;
 	let markGraphQlStarted;
 	const graphQlStarted = new Promise((resolve) => {
@@ -1192,14 +1198,14 @@ test('seen alert, version, and note state remains within documented limits', asy
 
 test('trigger UI states ActivityFeed discovery requirements', () => {
 	const source = readFileSync(
-		join(packageRoot, 'nodes/SentinelOneTrigger/SentinelOneTrigger.node.ts'),
+		join(packageRoot, 'nodes/SentinelOneAlertsTrigger/SentinelOneAlertsTrigger.node.ts'),
 		'utf8',
 	);
 	assert.match(source, /Parent alert updates are not required\./);
 });
 
 test('scope fields allow accessible sites without an account selection', () => {
-	const properties = new SentinelOneTrigger().description.properties;
+	const properties = new SentinelOneAlertsTrigger().description.properties;
 	const accounts = properties.find((property) => property.name === 'accountIds');
 	const sites = properties.find((property) => property.name === 'siteIds');
 	const groups = properties.find((property) => property.name === 'groupIds');
@@ -1211,7 +1217,7 @@ test('scope fields allow accessible sites without an account selection', () => {
 
 test('trigger UI uses resource, operation, and resource-specific options', () => {
 	const source = readFileSync(
-		join(packageRoot, 'nodes/SentinelOneTrigger/SentinelOneTrigger.node.ts'),
+		join(packageRoot, 'nodes/SentinelOneAlertsTrigger/SentinelOneAlertsTrigger.node.ts'),
 		'utf8',
 	);
 
@@ -1233,11 +1239,11 @@ const {
 	compileExclusion,
 	matchesExclusion,
 	noteAuthorName,
-} = require('../../dist/nodes/SentinelOneTrigger/Exclusions.js');
+} = require('../../dist/nodes/SentinelOneAlertsTrigger/Exclusions.js');
 const { discoverVisibleScopes } = require(builtHelpers);
 const testNode = {
-	name: 'SentinelOne Trigger',
-	type: 'sentinelOneTrigger',
+	name: 'SentinelOne Alerts Trigger',
+	type: 'sentinelOneAlertsTrigger',
 	typeVersion: 1,
 	position: [0, 0],
 	parameters: {},
@@ -1506,7 +1512,7 @@ test('malformed connections and note timestamps fail without a successful result
 });
 
 test('site-scoped node polls accessible sites without account-list permission', async () => {
-	const node = new SentinelOneTrigger();
+	const node = new SentinelOneAlertsTrigger();
 	const calls = [];
 	const request = async (options) => {
 		calls.push(options.url);
@@ -1920,8 +1926,10 @@ test('note polling scales with changed alerts instead of daily alert volume', as
 });
 
 test('credential uses the same Bearer token for SDL, GraphQL, and management REST', async () => {
-	const { SentinelOneApi } = require('../../dist/credentials/SentinelOneApi.credentials.js');
-	const credential = new SentinelOneApi();
+	const {
+		SentinelOneAlertsApi,
+	} = require('../../dist/credentials/SentinelOneAlertsApi.credentials.js');
+	const credential = new SentinelOneAlertsApi();
 	const data = { baseUrl: 'https://tenant.example', apiToken: 'test-token' };
 	for (const path of ['/sdl/v2/api/queries', '/sdl/v2/api/queries/query-id']) {
 		for (const key of ['url', 'uri']) {
@@ -1995,7 +2003,7 @@ test('the actual note node dispatches through SDL and returns SDL note text with
 			return alertResponse([alertWithNotes('live-note-alert')]);
 		assert.fail('Unexpected request path: ' + r.url);
 	};
-	const node = new SentinelOneTrigger();
+	const node = new SentinelOneAlertsTrigger();
 	const manual = createNodeContext(params, request);
 	const result = await node.poll.call(manual);
 	assert.equal(result[0][0].json.noteId, null);

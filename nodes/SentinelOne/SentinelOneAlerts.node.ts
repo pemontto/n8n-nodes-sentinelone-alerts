@@ -44,26 +44,26 @@ function safeFailureOutput(error: NodeApiError | NodeOperationError): IDataObjec
 	return output;
 }
 
-export class SentinelOne implements INodeType {
+export class SentinelOneAlerts implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'SentinelOne',
-		name: 'sentinelOne',
+		displayName: 'SentinelOne Alerts',
+		name: 'sentinelOneAlerts',
 		icon: {
-			light: 'file:../SentinelOneTrigger/sentinelone.svg',
-			dark: 'file:../SentinelOneTrigger/sentinelone.dark.svg',
+			light: 'file:../SentinelOneAlertsTrigger/sentinelone.svg',
+			dark: 'file:../SentinelOneAlertsTrigger/sentinelone.dark.svg',
 		},
 		group: ['output'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
 		description: 'Read and update alerts, create alert notes, and run SDL queries',
 		defaults: {
-			name: 'SentinelOne',
+			name: 'SentinelOne Alerts',
 		},
 		inputs: [NodeConnectionTypes.Main],
 		outputs: [NodeConnectionTypes.Main],
 		credentials: [
 			{
-				name: 'sentinelOneApi',
+				name: 'sentinelOneAlertsApi',
 				required: true,
 			},
 		],

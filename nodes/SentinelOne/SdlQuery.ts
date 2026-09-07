@@ -5,7 +5,7 @@ import {
 	type IHttpRequestOptions,
 } from 'n8n-workflow';
 
-const CREDENTIAL_TYPE = 'sentinelOneApi';
+const CREDENTIAL_TYPE = 'sentinelOneAlertsApi';
 const FORWARD_HEADER = 'x-dataset-query-forward-tag';
 const MAX_FORWARD_HEADER_LENGTH = 1024;
 const REQUEST_TIMEOUT_MS = 30_000;

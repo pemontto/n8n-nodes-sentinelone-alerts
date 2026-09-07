@@ -1,9 +1,11 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { pollActivityNotes } = require('../../dist/nodes/SentinelOneTrigger/ActivityNotePoll.js');
+const {
+	pollActivityNotes,
+} = require('../../dist/nodes/SentinelOneAlertsTrigger/ActivityNotePoll.js');
 const {
 	fingerprintConfig,
-} = require('../../dist/nodes/SentinelOneTrigger/SentinelOneTriggerHelpers.js');
+} = require('../../dist/nodes/SentinelOneAlertsTrigger/SentinelOneTriggerHelpers.js');
 const PREVIEW_START = Date.UTC(2020, 0, 1);
 const NOW = 1788776400000;
 const cfg = (extra = {}) => ({

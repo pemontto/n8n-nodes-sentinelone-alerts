@@ -3,7 +3,7 @@ const test = require('node:test');
 const {
 	readActivityFeed,
 	ACTIVITY_FEED_QUERY,
-} = require('../../dist/nodes/SentinelOneTrigger/ActivityFeed.js');
+} = require('../../dist/nodes/SentinelOneAlertsTrigger/ActivityFeed.js');
 
 const BASE = 'https://tenant.example';
 const START = 1788776400000;
