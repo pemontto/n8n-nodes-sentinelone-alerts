@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 - Unreleased
+## 0.1.0 - 2026-09-07
 
 - Add one alert polling trigger and a reusable SentinelOne credential.
 - Support New, Updated, and New or Updated alert operations.
