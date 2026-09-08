@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 - Unreleased
+## 0.2.0 - 2026-09-08
 
 - Return the common alert investigation fields by default in the trigger.
 - Add validated raw GraphQL alert filters with flat AND and grouped OR-of-AND forms.
