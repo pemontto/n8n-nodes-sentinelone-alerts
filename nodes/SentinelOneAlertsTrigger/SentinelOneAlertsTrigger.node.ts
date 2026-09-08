@@ -254,7 +254,7 @@ export class SentinelOneAlertsTrigger implements INodeType {
 						type: 'json',
 						default: '[]',
 						description:
-							'Raw SentinelOne FilterInput array to append with AND, or an OrFilterSelectionInput object for grouped OR. Guided filters apply to every OR branch.',
+							'Add custom SentinelOne filters as JSON. Use an array to require every filter, or use or groups when any group may match. Severity, status, name, and time filters still apply.',
 					},
 					{
 						displayName: 'Alert Name',

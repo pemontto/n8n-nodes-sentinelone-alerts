@@ -22,7 +22,7 @@ Use **Options** to filter alerts by severity, status, and alert-name text.
 
 ### Advanced filters
 
-**Advanced Filters** accepts raw JSON for SentinelOne's GraphQL filter inputs. SentinelOne validates whether a field supports the selected comparator.
+**Advanced Filters** accepts custom SentinelOne filters as JSON. SentinelOne validates whether a field supports the selected comparison.
 
 An array appends filters to the guided filters. Every item is joined with AND:
 
@@ -36,7 +36,7 @@ An array appends filters to the guided filters. Every item is joined with AND:
 ]
 ```
 
-Use SentinelOne's `orFilter` shape for grouped logic. Items within each `and` array are joined with AND; the outer groups are joined with OR:
+Use `or` groups when any group may match. Every filter inside an `and` group must match:
 
 ```json
 {
