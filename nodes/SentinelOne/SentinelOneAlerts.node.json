@@ -6,12 +6,12 @@
 	"resources": {
 		"credentialDocumentation": [
 			{
-				"url": "https://github.com/pemontto/n8n-nodes-sentinelone-alerts#credentials"
+				"url": "https://github.com/pemontto/n8n-nodes-sentinelone-alerts/blob/main/docs/credentials.md"
 			}
 		],
 		"primaryDocumentation": [
 			{
-				"url": "https://github.com/pemontto/n8n-nodes-sentinelone-alerts#readme"
+				"url": "https://github.com/pemontto/n8n-nodes-sentinelone-alerts/blob/main/docs/actions.md"
 			}
 		]
 	}

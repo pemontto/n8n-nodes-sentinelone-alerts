@@ -3,6 +3,7 @@ const test = require('node:test');
 
 const { SentinelOneAlerts } = require('../../dist/nodes/SentinelOne/SentinelOneAlerts.node.js');
 const { routeSentinelOneOperation } = require('../../dist/nodes/SentinelOne/router.js');
+const actionMetadata = require('../../nodes/SentinelOne/SentinelOneAlerts.node.json');
 
 const ACCOUNT_ID = '90071992547409930001';
 const ALERT_ID = '018e1efe-6784-7c0f-893f-b8b8e740a6cd';
@@ -90,6 +91,10 @@ test('action node description exposes the intended v1 resources, operations, and
 	assert.deepEqual(description.outputs, ['main']);
 	assert.deepEqual(description.credentials, [{ name: 'sentinelOneAlertsApi', required: true }]);
 	assert.equal(description.usableAsTool, true);
+	assert.equal(
+		actionMetadata.resources.primaryDocumentation[0].url,
+		'https://github.com/pemontto/n8n-nodes-sentinelone-alerts/blob/main/docs/actions.md',
+	);
 
 	const [resource] = propertiesByName(description, 'resource');
 	assert.equal(resource.default, 'alert');

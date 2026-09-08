@@ -254,7 +254,7 @@ export class SentinelOneAlertsTrigger implements INodeType {
 						type: 'json',
 						default: '[]',
 						description:
-							'Add custom SentinelOne filters as JSON. Use an array to require every filter, or use or groups when any group may match. Severity, status, name, and time filters still apply.',
+							'Add custom SentinelOne filters as JSON. Use an array to require every filter, or use or groups when any group may match. Severity, status, name, and time filters still apply. <a href="https://github.com/pemontto/n8n-nodes-sentinelone-alerts/blob/main/docs/trigger.md#advanced-filters">See examples</a>.',
 					},
 					{
 						displayName: 'Alert Name',

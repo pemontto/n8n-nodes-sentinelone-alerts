@@ -15,7 +15,8 @@ export class SentinelOneAlertsApi implements ICredentialType {
 		dark: 'file:../nodes/SentinelOneAlertsTrigger/sentinelone.dark.svg',
 	} as const;
 
-	documentationUrl = 'https://docs.sentinelone.com/';
+	documentationUrl =
+		'https://github.com/pemontto/n8n-nodes-sentinelone-alerts/blob/main/docs/credentials.md';
 
 	properties: INodeProperties[] = [
 		{

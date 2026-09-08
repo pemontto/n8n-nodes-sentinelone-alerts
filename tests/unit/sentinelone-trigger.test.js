@@ -1363,6 +1363,17 @@ test('trigger UI uses resource, operation, and resource-specific options', () =>
 	);
 	assert.equal(advancedFilters.type, 'json');
 	assert.equal(advancedFilters.default, '[]');
+	assert.match(advancedFilters.description, /docs\/trigger\.md#advanced-filters/);
+	const metadata = JSON.parse(
+		readFileSync(
+			join(packageRoot, 'nodes/SentinelOneAlertsTrigger/SentinelOneAlertsTrigger.node.json'),
+			'utf8',
+		),
+	);
+	assert.equal(
+		metadata.resources.primaryDocumentation[0].url,
+		'https://github.com/pemontto/n8n-nodes-sentinelone-alerts/blob/main/docs/trigger.md',
+	);
 	assert.doesNotMatch(
 		source,
 		/displayName: '(?:Alert Page Size|Concurrent Requests|Max Alert Pages|Max Timeline Pages|Overlap|Request Timeout \(Ms\)|Timeline Page Size)'/,
@@ -2066,6 +2077,10 @@ test('credential uses the same Bearer token for SDL, GraphQL, and management RES
 	const credential = new SentinelOneAlertsApi();
 	assert.equal(credential.name, 'sentinelOneAlertsApi');
 	assert.equal(credential.displayName, 'SentinelOne Alerts API');
+	assert.equal(
+		credential.documentationUrl,
+		'https://github.com/pemontto/n8n-nodes-sentinelone-alerts/blob/main/docs/credentials.md',
+	);
 	assert.deepEqual(credential.test, {
 		request: {
 			baseURL: '={{$credentials.baseUrl.replace(/\\/$/, "")}}',
