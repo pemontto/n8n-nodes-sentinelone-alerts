@@ -37,6 +37,7 @@ export interface TriggerConfig extends ExclusionPatterns {
 	severities: string[];
 	statuses: string[];
 	alertName: string;
+	advancedFilters?: unknown;
 	simplifyOutput: boolean;
 	additionalAlertFields?: string[];
 	includeOcsf?: boolean;
@@ -148,8 +149,8 @@ interface RestEnvelope {
 }
 
 const ALERTS_QUERY = `
-query PollAlerts($first: Int!, $after: String, $scope: ScopeSelectorInput!, $filters: [FilterInput!], $sortBy: String!) {
-  alerts(first: $first, after: $after, scope: $scope, viewType: ALL, sort: { by: $sortBy, order: DESC }, filters: $filters) {
+query PollAlerts($first: Int!, $after: String, $scope: ScopeSelectorInput!, $filters: [FilterInput!], $orFilter: OrFilterSelectionInput, $sortBy: String!) {
+  alerts(first: $first, after: $after, scope: $scope, viewType: ALL, sort: { by: $sortBy, order: DESC }, filters: $filters, orFilter: $orFilter) {
     edges {
       node {
         id
@@ -208,6 +209,86 @@ function asRecord(value: unknown): IDataObject | undefined {
 	return value !== null && typeof value === 'object' && !Array.isArray(value)
 		? (value as IDataObject)
 		: undefined;
+}
+
+const FILTER_COMPARATORS = [
+	'booleanEqual',
+	'booleanIn',
+	'dateTimeRange',
+	'intEqual',
+	'intIn',
+	'intRange',
+	'longEqual',
+	'longIn',
+	'longRange',
+	'match',
+	'stringEqual',
+	'stringIn',
+] as const;
+
+function validateRawFilter(value: unknown): IDataObject {
+	const filter = asRecord(value);
+	if (!filter) throw new Error('Each advanced filter must be an object.');
+	const allowedKeys = new Set(['fieldId', 'isNegated', ...FILTER_COMPARATORS]);
+	const unknownKeys = Object.keys(filter).filter((key) => !allowedKeys.has(key));
+	if (unknownKeys.length > 0)
+		throw new Error(`Unknown advanced filter key: ${unknownKeys.join(', ')}.`);
+	const fieldId = typeof filter.fieldId === 'string' ? filter.fieldId.trim() : '';
+	if (!fieldId) throw new Error('Each advanced filter needs a non-empty fieldId.');
+	if (filter.isNegated !== undefined && typeof filter.isNegated !== 'boolean')
+		throw new Error('Advanced filter isNegated must be true or false.');
+	const comparators = FILTER_COMPARATORS.filter((key) => filter[key] !== undefined);
+	if (comparators.length !== 1)
+		throw new Error(`Advanced filter ${fieldId} must use exactly one comparator.`);
+	const comparator = asRecord(filter[comparators[0]]);
+	if (!comparator) throw new Error(`Advanced filter ${fieldId} comparator must be an object.`);
+	return {
+		fieldId,
+		...(filter.isNegated === undefined ? {} : { isNegated: filter.isNegated }),
+		[comparators[0]]: comparator,
+	};
+}
+
+type FilterSelection = {
+	filters: IDataObject[] | null;
+	orFilter: IDataObject | null;
+};
+
+export function advancedFilterSelection(
+	baseFilters: IDataObject[],
+	input: unknown,
+): FilterSelection {
+	if (input === undefined || input === null || input === '')
+		return { filters: baseFilters, orFilter: null };
+	let value: unknown = input;
+	if (typeof value === 'string') {
+		let parsed: unknown;
+		try {
+			parsed = JSON.parse(value) as unknown;
+		} catch {
+			parsed = undefined;
+		}
+		if (parsed === undefined) throw new Error('Advanced Filters must contain valid JSON.');
+		value = parsed;
+	}
+	if (Array.isArray(value)) {
+		if (value.length > 100) throw new Error('Advanced Filters supports at most 100 filters.');
+		return { filters: [...baseFilters, ...value.map(validateRawFilter)], orFilter: null };
+	}
+	const selection = asRecord(value);
+	if (!selection || Object.keys(selection).length !== 1 || !Array.isArray(selection.or))
+		throw new Error('Advanced Filters must be a FilterInput array or an object containing or.');
+	if (selection.or.length === 0 || selection.or.length > 20)
+		throw new Error('Advanced Filters or must contain from 1 to 20 groups.');
+	const groups = selection.or.map((value) => {
+		const group = asRecord(value);
+		if (!group || Object.keys(group).length !== 1 || !Array.isArray(group.and))
+			throw new Error('Each Advanced Filters or group must contain an and array.');
+		if (group.and.length > 100)
+			throw new Error('Each Advanced Filters and group supports at most 100 filters.');
+		return { and: [...baseFilters, ...group.and.map(validateRawFilter)] };
+	});
+	return { filters: null, orFilter: { or: groups } };
 }
 
 function stableStringify(value: unknown): string {
@@ -282,6 +363,7 @@ export function fingerprintConfig(config: TriggerConfig): string {
 			severities: [...config.severities].sort(),
 			statuses: [...config.statuses].sort(),
 			alertName: config.alertName.trim(),
+			advancedFilters: advancedFilterSelection([], config.advancedFilters),
 			excludeAccountName: config.excludeAccountName ?? '',
 			excludeSiteName: config.excludeSiteName ?? '',
 			excludeGroupName: config.excludeGroupName ?? '',
@@ -393,7 +475,10 @@ async function fetchAlerts(
 		if (remaining !== undefined && remaining <= 0) return alerts.slice(0, maxItems);
 		const first =
 			remaining === undefined ? config.alertPageSize : Math.min(config.alertPageSize, remaining);
-		const filters = buildFilters(config, fieldId, start, end);
+		const selection = advancedFilterSelection(
+			buildFilters(config, fieldId, start, end),
+			config.advancedFilters,
+		);
 		debugLog(config, 'Requesting Unified Alerts page', {
 			fieldId,
 			pageNumber,
@@ -401,7 +486,7 @@ async function fetchAlerts(
 			hasCursor: after !== undefined,
 			scopeType: config.scopeType,
 			scopeCount: config.scopeIds.length,
-			filterFields: filters.map((filter) => filter.fieldId),
+			filterMode: selection.orFilter ? 'orFilter' : 'filters',
 		});
 		const response = await request({
 			method: 'POST',
@@ -416,7 +501,8 @@ async function fetchAlerts(
 					first,
 					after: after ?? null,
 					scope: { scopeType: config.scopeType, scopeIds: config.scopeIds },
-					filters,
+					filters: selection.filters,
+					orFilter: selection.orFilter,
 					sortBy: fieldId,
 				},
 			},

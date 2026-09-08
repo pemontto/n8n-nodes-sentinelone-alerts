@@ -20,6 +20,48 @@ Select accounts to narrow the site list. Select sites to narrow the group list. 
 
 Use **Options** to filter alerts by severity, status, and alert-name text.
 
+### Advanced filters
+
+**Advanced Filters** accepts raw JSON for SentinelOne's GraphQL filter inputs. SentinelOne validates whether a field supports the selected comparator.
+
+An array appends filters to the guided filters. Every item is joined with AND:
+
+```json
+[
+	{ "fieldId": "detectionProduct", "stringEqual": { "value": "STAR" } },
+	{
+		"fieldId": "ticketId",
+		"match": { "operator": "contains", "values": ["\"OrroCyberID\":\""] }
+	}
+]
+```
+
+Use SentinelOne's `orFilter` shape for grouped logic. Items within each `and` array are joined with AND; the outer groups are joined with OR:
+
+```json
+{
+	"or": [
+		{
+			"and": [
+				{ "fieldId": "detectionProduct", "stringEqual": { "value": "STAR" } },
+				{
+					"fieldId": "ticketId",
+					"match": { "operator": "contains", "values": ["\"OrroCyberID\":\""] }
+				}
+			]
+		},
+		{
+			"and": [
+				{ "fieldId": "detectionProduct", "stringIn": { "values": ["CLOUD", "IDENTITY"] } },
+				{ "fieldId": "severity", "stringIn": { "values": ["HIGH", "CRITICAL"] } }
+			]
+		}
+	]
+}
+```
+
+Guided filters, including the polling time window, are added to every OR group. Set `"isNegated": true` on an individual filter to negate it.
+
 ### Name exclusions
 
 You can exclude account, site, and group names with case-insensitive regular expressions. Alert Note also supports excluding note author names. Do not include `/` delimiters or flags.
@@ -68,6 +110,8 @@ An activity ID is not a SentinelOne note ID.
 ## Additional alert fields
 
 Open **Options > Additional Alert Fields** to add supported fields such as ticket ID, analyst verdict, assignee, classification, confidence level, storyline ID, and labels.
+
+Ticket ID, result, storyline ID, data sources, confidence level, classification, description, detection source, analyst verdict, analytics, assignee, attack path existence, attack surfaces, and available action IDs are selected by default. Clear fields you do not need.
 
 Enable **Include SentinelOne OCSF** to add selected fields from SentinelOne's native OCSF representation. See [OCSF fields](ocsf-fields.md).
 

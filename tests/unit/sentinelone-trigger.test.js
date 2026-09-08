@@ -22,6 +22,7 @@ const {
 	MAX_SEEN_ALERT_VERSIONS,
 	MAX_SEEN_NOTE_IDS,
 	MAX_SCOPE_IDS_PER_QUERY,
+	advancedFilterSelection,
 	fingerprintConfig,
 	loadScopeOptions,
 	pollSentinelOne,
@@ -255,6 +256,7 @@ test('empty scope selection discovers all accounts and the deepest selected scop
 		operation: 'new',
 		options: { simplifyOutput: false },
 	};
+	let discoveredQuery;
 	let discoveredVariables;
 	const discoveryContext = createNodeContext(baseParams, async (options) => {
 		if (options.method === 'GET') {
@@ -266,7 +268,9 @@ test('empty scope selection discovers all accounts and the deepest selected scop
 				pagination: { nextCursor: null },
 			};
 		}
+		discoveredQuery = options.body.query;
 		discoveredVariables = queryVariables(options);
+		discoveredQuery = options.body.query;
 		return alertResponse([alert('preview-alert')]);
 	});
 	const discoveryResult = await node.poll.call(discoveryContext);
@@ -275,6 +279,16 @@ test('empty scope selection discovers all accounts and the deepest selected scop
 		scopeType: 'ACCOUNT',
 		scopeIds: ['account-1', 'account-2'],
 	});
+	for (const field of [
+		'ticketId',
+		'result',
+		'storylineId',
+		'dataSources',
+		'detectionSource',
+		'availableActionIds',
+	]) {
+		assert.match(discoveredQuery, new RegExp(`\\b${field}\\b`));
+	}
 	assert.equal(discoveryResult[0][0].json.eventType, 'alert.new');
 
 	let hierarchyVariables;
@@ -694,11 +708,102 @@ test('configuration change fully rebaselines without historical output', async (
 	assert.equal(result.nextState.configFingerprint, fingerprintConfig(newConfig));
 });
 
+test('advanced filter arrays append with AND and grouped OR applies guided filters to each branch', () => {
+	const base = [{ fieldId: 'createdAt', dateTimeRange: { start: NOW - 60_000 } }];
+	assert.deepEqual(
+		advancedFilterSelection(
+			base,
+			JSON.stringify([
+				{ fieldId: 'detectionProduct', stringEqual: { value: 'STAR' } },
+				{
+					fieldId: 'ticketId',
+					match: { operator: 'contains', values: ['"OrroCyberID":"'] },
+				},
+			]),
+		),
+		{
+			filters: [
+				...base,
+				{ fieldId: 'detectionProduct', stringEqual: { value: 'STAR' } },
+				{
+					fieldId: 'ticketId',
+					match: { operator: 'contains', values: ['"OrroCyberID":"'] },
+				},
+			],
+			orFilter: null,
+		},
+	);
+
+	const grouped = advancedFilterSelection(base, {
+		or: [
+			{ and: [{ fieldId: 'detectionProduct', stringEqual: { value: 'STAR' } }] },
+			{ and: [{ fieldId: 'severity', stringIn: { values: ['HIGH', 'CRITICAL'] } }] },
+		],
+	});
+	assert.equal(grouped.filters, null);
+	assert.deepEqual(grouped.orFilter, {
+		or: [
+			{
+				and: [...base, { fieldId: 'detectionProduct', stringEqual: { value: 'STAR' } }],
+			},
+			{
+				and: [...base, { fieldId: 'severity', stringIn: { values: ['HIGH', 'CRITICAL'] } }],
+			},
+		],
+	});
+});
+
+test('advanced grouped filters use orFilter and malformed input fails before a request', async () => {
+	const advancedFilters = {
+		or: [
+			{ and: [{ fieldId: 'detectionProduct', stringEqual: { value: 'STAR' } }] },
+			{ and: [{ fieldId: 'ticketId', isNegated: true, match: { values: ['internal'] } }] },
+		],
+	};
+	await pollSentinelOne(
+		async (request) => {
+			assert.equal(request.body.variables.filters, null);
+			assert.equal(request.body.variables.orFilter.or.length, 2);
+			assert.match(request.body.query, /\$orFilter: OrFilterSelectionInput/);
+			return alertResponse([]);
+		},
+		config({ advancedFilters }),
+		{},
+		'manual',
+		NOW,
+	);
+	for (const value of [
+		[{ fieldId: '', stringEqual: { value: 'STAR' } }],
+		[{ fieldId: 'status', stringEqual: { value: 'NEW' }, stringIn: { values: ['NEW'] } }],
+		{ or: [{ filters: [] }] },
+	]) {
+		await assert.rejects(
+			() =>
+				pollSentinelOne(
+					async () => assert.fail('must not request'),
+					config({ advancedFilters: value }),
+					{},
+					'manual',
+					NOW,
+				),
+			/advanced filter/i,
+		);
+	}
+});
+
 test('semantic changes rebaseline but operational tuning and display names do not', () => {
 	const original = config();
 	assert.notEqual(
 		fingerprintConfig(original),
 		fingerprintConfig(config({ baseUrl: 'https://other-tenant.example' })),
+	);
+	assert.notEqual(
+		fingerprintConfig(original),
+		fingerprintConfig(
+			config({
+				advancedFilters: [{ fieldId: 'detectionProduct', stringEqual: { value: 'STAR' } }],
+			}),
+		),
 	);
 	assert.equal(
 		fingerprintConfig(original),
@@ -1216,6 +1321,7 @@ test('scope fields allow accessible sites without an account selection', () => {
 });
 
 test('trigger UI uses resource, operation, and resource-specific options', () => {
+	const node = new SentinelOneAlertsTrigger();
 	const source = readFileSync(
 		join(packageRoot, 'nodes/SentinelOneAlertsTrigger/SentinelOneAlertsTrigger.node.ts'),
 		'utf8',
@@ -1229,6 +1335,34 @@ test('trigger UI uses resource, operation, and resource-specific options', () =>
 	assert.doesNotMatch(source, /previewLookbackMinutes/);
 	assert.match(source, /displayName: 'Debug'[\s\S]*?default: false/);
 	assert.match(source, /displayName: 'Simplify'[\s\S]*?default: true/);
+	const alertOptions = node.description.properties.find(
+		(property) =>
+			property.name === 'options' && property.displayOptions?.show?.resource?.includes('alert'),
+	);
+	const additionalFields = alertOptions.options.find(
+		(property) => property.name === 'additionalAlertFields',
+	);
+	assert.deepEqual(additionalFields.default, [
+		'ticketId',
+		'result',
+		'storylineId',
+		'dataSources',
+		'confidenceLevel',
+		'classification',
+		'description',
+		'detectionSource',
+		'analystVerdict',
+		'analytics',
+		'assignee',
+		'attackPathExists',
+		'attackSurfaces',
+		'availableActionIds',
+	]);
+	const advancedFilters = alertOptions.options.find(
+		(property) => property.name === 'advancedFilters',
+	);
+	assert.equal(advancedFilters.type, 'json');
+	assert.equal(advancedFilters.default, '[]');
 	assert.doesNotMatch(
 		source,
 		/displayName: '(?:Alert Page Size|Concurrent Requests|Max Alert Pages|Max Timeline Pages|Overlap|Request Timeout \(Ms\)|Timeline Page Size)'/,
@@ -1930,6 +2064,15 @@ test('credential uses the same Bearer token for SDL, GraphQL, and management RES
 		SentinelOneAlertsApi,
 	} = require('../../dist/credentials/SentinelOneAlertsApi.credentials.js');
 	const credential = new SentinelOneAlertsApi();
+	assert.equal(credential.name, 'sentinelOneAlertsApi');
+	assert.equal(credential.displayName, 'SentinelOne Alerts API');
+	assert.deepEqual(credential.test, {
+		request: {
+			baseURL: '={{$credentials.baseUrl.replace(/\\/$/, "")}}',
+			url: '/web/api/v2.1/sites?limit=1&states=active',
+			method: 'GET',
+		},
+	});
 	const data = { baseUrl: 'https://tenant.example', apiToken: 'test-token' };
 	for (const path of ['/sdl/v2/api/queries', '/sdl/v2/api/queries/query-id']) {
 		for (const key of ['url', 'uri']) {

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0 - Unreleased
+
+- Return the common alert investigation fields by default in the trigger.
+- Add validated raw GraphQL alert filters with flat AND and grouped OR-of-AND forms.
+- Add an automated assertion for the n8n credential test request.
+
 ## 0.1.0 - 2026-09-07
 
 - Add one alert polling trigger and a reusable SentinelOne credential.

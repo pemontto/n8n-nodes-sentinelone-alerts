@@ -19,6 +19,23 @@ const fields: Record<string, { name: string; selection: string }> = {
 	ticketId: { name: 'Ticket ID', selection: 'ticketId' },
 };
 
+export const DEFAULT_ADDITIONAL_ALERT_FIELDS = [
+	'ticketId',
+	'result',
+	'storylineId',
+	'dataSources',
+	'confidenceLevel',
+	'classification',
+	'description',
+	'detectionSource',
+	'analystVerdict',
+	'analytics',
+	'assignee',
+	'attackPathExists',
+	'attackSurfaces',
+	'availableActionIds',
+];
+
 export const additionalAlertFieldOptions: INodePropertyOptions[] = Object.entries(fields).map(
 	([value, field]) => ({ name: field.name, value }),
 );

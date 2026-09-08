@@ -22,7 +22,7 @@ import {
 	type TriggerState,
 } from './SentinelOneTriggerHelpers';
 
-import { additionalAlertFieldOptions } from './AlertFields';
+import { additionalAlertFieldOptions, DEFAULT_ADDITIONAL_ALERT_FIELDS } from './AlertFields';
 import { activityAccountIds } from './ActivityScope';
 import { pollActivityNotes } from './ActivityNotePoll';
 
@@ -243,10 +243,18 @@ export class SentinelOneAlertsTrigger implements INodeType {
 						displayName: 'Additional Alert Fields',
 						name: 'additionalAlertFields',
 						type: 'multiOptions',
-						default: [],
+						default: [...DEFAULT_ADDITIONAL_ALERT_FIELDS],
 						options: additionalAlertFieldOptions,
 						description:
 							'Extra alert fields to query and return, in addition to the standard event and scope fields',
+					},
+					{
+						displayName: 'Advanced Filters',
+						name: 'advancedFilters',
+						type: 'json',
+						default: '[]',
+						description:
+							'Raw SentinelOne FilterInput array to append with AND, or an OrFilterSelectionInput object for grouped OR. Guided filters apply to every OR branch.',
 					},
 					{
 						displayName: 'Alert Name',
@@ -538,9 +546,11 @@ export class SentinelOneAlertsTrigger implements INodeType {
 					severities: (options.severities as string[] | undefined) ?? [],
 					statuses: (options.statuses as string[] | undefined) ?? [],
 					alertName: String(options.alertName ?? ''),
+					advancedFilters: options.advancedFilters,
 					additionalAlertFields:
 						resource === 'alert'
-							? (options.additionalAlertFields as string[] | undefined)
+							? ((options.additionalAlertFields as string[] | undefined) ??
+								DEFAULT_ADDITIONAL_ALERT_FIELDS)
 							: undefined,
 					excludeAccountName: String(options.excludeAccountName ?? ''),
 					excludeSiteName: String(options.excludeSiteName ?? ''),
